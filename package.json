@@ -1,0 +1,48 @@
+{
+  "name": "victor-pos-api",
+  "version": "1.0.0",
+  "description": "API REST para gerenciamento de tarefas com autenticação JWT",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "test": "mocha --require test/setup.js test/**/*.test.js --timeout 10000",
+    "test:unit": "mocha --require test/unit/setup.js test/unit/**/*.test.js --timeout 10000",
+    "test:integration": "mocha --require test/setup.js test/auth.test.js test/tasks.test.js test/integration.test.js --timeout 10000",
+    "test:watch": "mocha --require test/setup.js test/**/*.test.js --watch --timeout 10000",
+    "test:coverage": "nyc mocha --require test/setup.js test/**/*.test.js --timeout 10000",
+    "test:coverage:unit": "nyc mocha --require test/unit/setup.js test/unit/**/*.test.js --timeout 10000"
+  },
+  "keywords": [
+    "api",
+    "rest",
+    "jwt",
+    "authentication",
+    "todo"
+  ],
+  "author": "Victor POS",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "chai-http": "^5.1.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.1.0",
+    "joi": "^17.11.0",
+    "jsonwebtoken": "^9.0.2",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "chai": "^4.3.10",
+    "mocha": "^10.2.0",
+    "nodemon": "^3.0.2",
+    "nyc": "^15.1.0",
+    "sinon": "^21.0.0",
+    "supertest": "^6.3.3"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
