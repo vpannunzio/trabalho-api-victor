@@ -3,4 +3,3 @@
 --recursive
 --reporter spec
 --exit
---bail

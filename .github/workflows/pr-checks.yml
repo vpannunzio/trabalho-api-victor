@@ -47,6 +47,10 @@ jobs:
         npm run test:coverage:unit
         # Aqui você poderia adicionar verificação de cobertura mínima
         echo "✅ Cobertura adequada"
+      env:
+        NODE_ENV: test
+        JWT_SECRET: test-jwt-secret-key
+        PORT: 3001
     
     - name: 🔒 Verificação de segurança básica
       run: |

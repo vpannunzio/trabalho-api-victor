@@ -49,6 +49,7 @@ jobs:
         PORT: 3001
 
     - name: Upload cobertura para Codecov
+      if: always()
       uses: codecov/codecov-action@v3
       with:
         file: ./coverage/lcov.info

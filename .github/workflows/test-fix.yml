@@ -1,0 +1,85 @@
+name: Test Fix - GitHub Actions
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: 🧪 Testes e Validação
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout do código
+      uses: actions/checkout@v4
+    
+    - name: 🔧 Configurar Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+    
+    - name: 📦 Instalar dependências
+      run: npm ci
+    
+    - name: 🔍 Verificar sintaxe do código
+      run: |
+        echo "Verificando sintaxe JavaScript..."
+        node -c src/app.js
+        node -c src/config/database.js
+        echo "✅ Sintaxe válida"
+    
+    - name: 📋 Verificar estrutura do projeto
+      run: |
+        echo "Verificando estrutura do projeto..."
+        test -f package.json || (echo "❌ package.json não encontrado" && exit 1)
+        test -f src/app.js || (echo "❌ src/app.js não encontrado" && exit 1)
+        test -d src/controllers || (echo "❌ src/controllers não encontrado" && exit 1)
+        test -d src/routes || (echo "❌ src/routes não encontrado" && exit 1)
+        test -d src/middleware || (echo "❌ src/middleware não encontrado" && exit 1)
+        echo "✅ Estrutura do projeto válida"
+    
+    - name: 🧪 Executar testes
+      run: npm test
+      env:
+        NODE_ENV: test
+        JWT_SECRET: test-jwt-secret-key
+        PORT: 3001
+    
+    - name: 📊 Gerar relatório de cobertura
+      run: npm run test:coverage
+      env:
+        NODE_ENV: test
+        JWT_SECRET: test-jwt-secret-key
+        PORT: 3001
+    
+    - name: 📤 Upload coverage para Codecov
+      if: always()
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage/lcov.info
+        flags: unittests
+        name: test-fix
+        fail_ci_if_error: false
+    
+    - name: 🔒 Verificação de segurança
+      run: |
+        echo "Verificando vulnerabilidades..."
+        npm audit --audit-level moderate
+        echo "✅ Verificação de segurança concluída"
+    
+    - name: 🏗️ Teste de build
+      run: |
+        echo "Testando build da aplicação..."
+        npm ci --only=production
+        echo "✅ Build testado com sucesso"
+    
+    - name: ✅ Notificar sucesso
+      run: |
+        echo "🎉 Todos os testes passaram!"
+        echo "📊 Cobertura de código gerada"
+        echo "🔒 Verificação de segurança OK"
+        echo "🏗️ Build funcionando"

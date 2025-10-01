@@ -45,6 +45,10 @@ jobs:
     
     - name: 📊 Gerar relatório de cobertura
       run: npm run test:coverage
+      env:
+        NODE_ENV: test
+        JWT_SECRET: test-jwt-secret-key
+        PORT: 3001
     
     - name: 📝 Gerar changelog
       id: changelog
