@@ -1,0 +1,46 @@
+# Configuração de codificação para arquivos de texto
+* text=auto
+
+# Arquivos JavaScript e JSON devem usar UTF-8
+*.js text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Arquivos de configuração
+*.md text eol=lf
+*.txt text eol=lf
+
+# Arquivos de documentação
+README.md text eol=lf
+LICENSE text eol=lf
+
+# Arquivos de configuração do Git
+.gitignore text eol=lf
+.gitattributes text eol=lf
+
+# Arquivos de ambiente
+.env* text eol=lf
+
+# Arquivos de teste
+*.test.js text eol=lf
+*.spec.js text eol=lf
+
+# Arquivos de configuração do Docker
+Dockerfile text eol=lf
+docker-compose.yml text eol=lf
+docker-compose.yaml text eol=lf
+
+# Arquivos de configuração do GitHub Actions
+.github/**/*.yml text eol=lf
+.github/**/*.yaml text eol=lf
+
+# Arquivos binários
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar.gz binary

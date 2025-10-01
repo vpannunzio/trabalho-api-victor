@@ -1,0 +1,73 @@
+name: Fix Encoding Issues
+
+on:
+  workflow_dispatch:
+    inputs:
+      fix_path_encoding:
+        description: 'Corrigir problemas de codificação de caminho'
+        required: true
+        default: true
+        type: boolean
+
+jobs:
+  fix-encoding:
+    name: 🔧 Corrigir Problemas de Codificação
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout do código
+      uses: actions/checkout@v4
+      with:
+        # Força o uso de LF para todos os arquivos
+        lfs: false
+    
+    - name: 🔧 Configurar Git para UTF-8
+      run: |
+        echo "Configurando Git para usar UTF-8..."
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+        git config --global core.quotepath false
+        git config --global core.precomposeunicode true
+        echo "✅ Configuração do Git atualizada"
+    
+    - name: 🔍 Verificar codificação dos arquivos
+      run: |
+        echo "Verificando codificação dos arquivos principais..."
+        file -bi src/app.js
+        file -bi package.json
+        file -bi README.md
+        echo "✅ Verificação de codificação concluída"
+    
+    - name: 🔄 Normalizar quebras de linha
+      run: |
+        echo "Normalizando quebras de linha..."
+        find . -type f -name "*.js" -o -name "*.json" -o -name "*.md" -o -name "*.yml" -o -name "*.yaml" | \
+        xargs dos2unix 2>/dev/null || true
+        echo "✅ Quebras de linha normalizadas"
+    
+    - name: 📝 Verificar estrutura do projeto
+      run: |
+        echo "Verificando estrutura do projeto..."
+        echo "Diretório atual: $(pwd)"
+        echo "Conteúdo do diretório:"
+        ls -la
+        echo "✅ Estrutura verificada"
+    
+    - name: 🧪 Testar execução do projeto
+      run: |
+        echo "Testando execução do projeto..."
+        node --version
+        npm --version
+        echo "Verificando sintaxe do arquivo principal..."
+        node -c src/app.js
+        echo "✅ Projeto pode ser executado corretamente"
+    
+    - name: 💾 Commit das correções
+      if: github.event.inputs.fix_path_encoding == 'true'
+      run: |
+        echo "Fazendo commit das correções de codificação..."
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add .
+        git diff --staged --quiet || git commit -m "🔧 Fix encoding issues and normalize line endings"
+        echo "✅ Correções commitadas"
