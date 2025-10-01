@@ -21,6 +21,9 @@ describe("AuthController - Testes Unitários Simplificados", () => {
       status: sandbox.stub().returnsThis(),
       json: sandbox.stub().returnsThis(),
     };
+    
+    // Configurar o mock para que res.status().json() funcione
+    res.status.returns(res);
   });
 
   afterEach(() => {
