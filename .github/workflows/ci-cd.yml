@@ -4,10 +4,9 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ main, develop, master ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main, develop, master ]
-  push:
-    tags: [ 'v*' ]
   
   
   workflow_dispatch:
