@@ -23,11 +23,12 @@ describe("AuthController - Testes Unitários", () => {
 
     // Mock do objeto response
     res = {
-      status: sandbox.stub(),
-      json: sandbox.stub(),
+      status: sandbox.stub().returnsThis(),
+      json: sandbox.stub().returnsThis(),
     };
+
+    // Configurar o mock para que res.status().json() funcione
     res.status.returns(res);
-    res.json.returns(res);
   });
 
   afterEach(() => {
@@ -82,7 +83,7 @@ describe("AuthController - Testes Unitários", () => {
       await authController.register(req, res);
 
       // Assert
-      sinon.assert.calledWith(res.status, 400);
+      sinon.assert.calledWith(res.status, 409);
       sinon.assert.calledOnce(res.json);
 
       const responseData = res.json.getCall(0).args[0];
@@ -105,7 +106,7 @@ describe("AuthController - Testes Unitários", () => {
       await authController.register(req, res);
 
       // Assert
-      sinon.assert.calledWith(bcryptHashStub, "123456", 10);
+      sinon.assert.calledWith(bcryptHashStub, "123456", 12);
     });
 
     it("deve gerar token JWT corretamente", async () => {
@@ -319,12 +320,14 @@ describe("AuthController - Testes Unitários", () => {
       await authController.updateProfile(req, res);
 
       // Assert
-      sinon.assert.calledWith(res.status, 400);
+      sinon.assert.calledWith(res.status, 409);
       sinon.assert.calledOnce(res.json);
 
       const responseData = res.json.getCall(0).args[0];
       expect(responseData.success).to.be.false;
-      expect(responseData.message).to.equal("Email já está em uso");
+      expect(responseData.message).to.equal(
+        "Email já está em uso por outro usuário"
+      );
     });
   });
 

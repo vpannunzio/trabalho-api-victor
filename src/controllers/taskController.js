@@ -3,13 +3,20 @@ const database = require("../config/database");
 class TaskController {
   async createTask(req, res) {
     try {
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: "Token de acesso requerido",
+        });
+      }
+
       const { title, description, priority } = req.body;
       const userId = req.user.id;
 
       const task = database.createTask({
         title,
         description,
-        priority,
+        priority: priority || "medium",
         completed: false,
         userId,
       });
@@ -32,6 +39,13 @@ class TaskController {
 
   async getTasks(req, res) {
     try {
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: "Token de acesso requerido",
+        });
+      }
+
       const userId = req.user.id;
       const { completed, priority, page = 1, limit = 10 } = req.query;
 
@@ -87,6 +101,13 @@ class TaskController {
 
   async getTask(req, res) {
     try {
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: "Token de acesso requerido",
+        });
+      }
+
       const { id } = req.params;
       const userId = req.user.id;
 
@@ -122,6 +143,13 @@ class TaskController {
 
   async updateTask(req, res) {
     try {
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: "Token de acesso requerido",
+        });
+      }
+
       const { id } = req.params;
       const userId = req.user.id;
       const updates = req.body;
@@ -167,6 +195,13 @@ class TaskController {
 
   async deleteTask(req, res) {
     try {
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: "Token de acesso requerido",
+        });
+      }
+
       const { id } = req.params;
       const userId = req.user.id;
 
@@ -208,6 +243,13 @@ class TaskController {
 
   async toggleTaskCompletion(req, res) {
     try {
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: "Token de acesso requerido",
+        });
+      }
+
       const { id } = req.params;
       const userId = req.user.id;
 
@@ -250,6 +292,13 @@ class TaskController {
 
   async getTaskStatistics(req, res) {
     try {
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: "Token de acesso requerido",
+        });
+      }
+
       const userId = req.user.id;
       const tasks = database.findTasksByUserId(userId);
 

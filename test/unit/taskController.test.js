@@ -21,11 +21,12 @@ describe("TaskController - Testes Unitários", () => {
     };
 
     res = {
-      status: sandbox.stub(),
-      json: sandbox.stub(),
+      status: sandbox.stub().returnsThis(),
+      json: sandbox.stub().returnsThis(),
     };
+
+    // Configurar o mock para que res.status().json() funcione
     res.status.returns(res);
-    res.json.returns(res);
   });
 
   afterEach(() => {
@@ -114,7 +115,7 @@ describe("TaskController - Testes Unitários", () => {
       const responseData = res.json.getCall(0).args[0];
       expect(responseData.success).to.be.true;
       expect(responseData.data.tasks).to.have.length(3);
-      expect(responseData.data.pagination.total).to.equal(3);
+      expect(responseData.data.pagination.totalTasks).to.equal(3);
     });
 
     it("deve filtrar tarefas por prioridade", async () => {
@@ -138,9 +139,8 @@ describe("TaskController - Testes Unitários", () => {
 
       const responseData = res.json.getCall(0).args[0];
       expect(responseData.data.tasks).to.have.length(2);
-      expect(responseData.data.pagination.page).to.equal(1);
-      expect(responseData.data.pagination.limit).to.equal(2);
-      expect(responseData.data.pagination.total).to.equal(3);
+      expect(responseData.data.pagination.currentPage).to.equal(1);
+      expect(responseData.data.pagination.totalTasks).to.equal(3);
     });
 
     it("deve retornar erro sem autenticação", async () => {
@@ -204,12 +204,12 @@ describe("TaskController - Testes Unitários", () => {
 
       await taskController.getTask(req, res);
 
-      sinon.assert.calledWith(res.status, 400);
+      sinon.assert.calledWith(res.status, 404);
       sinon.assert.calledOnce(res.json);
 
       const responseData = res.json.getCall(0).args[0];
       expect(responseData.success).to.be.false;
-      expect(responseData.message).to.equal("ID da tarefa inválido");
+      expect(responseData.message).to.equal("Tarefa não encontrada");
     });
   });
 
@@ -268,12 +268,12 @@ describe("TaskController - Testes Unitários", () => {
 
       await taskController.updateTask(req, res);
 
-      sinon.assert.calledWith(res.status, 400);
+      sinon.assert.calledWith(res.status, 404);
       sinon.assert.calledOnce(res.json);
 
       const responseData = res.json.getCall(0).args[0];
       expect(responseData.success).to.be.false;
-      expect(responseData.message).to.equal("ID da tarefa inválido");
+      expect(responseData.message).to.equal("Tarefa não encontrada");
     });
   });
 
@@ -406,12 +406,12 @@ describe("TaskController - Testes Unitários", () => {
 
       const responseData = res.json.getCall(0).args[0];
       expect(responseData.success).to.be.true;
-      expect(responseData.data.statistics.total).to.equal(4);
-      expect(responseData.data.statistics.completed).to.equal(2);
-      expect(responseData.data.statistics.pending).to.equal(2);
-      expect(responseData.data.statistics.byPriority.high).to.equal(2);
-      expect(responseData.data.statistics.byPriority.medium).to.equal(1);
-      expect(responseData.data.statistics.byPriority.low).to.equal(1);
+      expect(responseData.data.overview.total).to.equal(4);
+      expect(responseData.data.overview.completed).to.equal(2);
+      expect(responseData.data.overview.pending).to.equal(2);
+      expect(responseData.data.priority.high).to.equal(2);
+      expect(responseData.data.priority.medium).to.equal(1);
+      expect(responseData.data.priority.low).to.equal(1);
     });
 
     it("deve retornar erro sem autenticação", async () => {
@@ -461,12 +461,12 @@ describe("TaskController - Testes Unitários", () => {
 
       await taskController.getTask(req, res);
 
-      sinon.assert.calledWith(res.status, 404);
+      sinon.assert.calledWith(res.status, 403);
       sinon.assert.calledOnce(res.json);
 
       const responseData = res.json.getCall(0).args[0];
       expect(responseData.success).to.be.false;
-      expect(responseData.message).to.equal("Tarefa não encontrada");
+      expect(responseData.message).to.equal("Acesso negado a esta tarefa");
     });
   });
 

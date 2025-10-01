@@ -18,12 +18,12 @@ describe("AuthController - Testes Unitários Simplificados", () => {
     };
 
     res = {
-      status: sandbox.stub(),
-      json: sandbox.stub(),
+      status: sandbox.stub().returnsThis(),
+      json: sandbox.stub().returnsThis(),
     };
 
+    // Configurar o mock para que res.status().json() funcione
     res.status.returns(res);
-    res.json.returns(res);
   });
 
   afterEach(() => {

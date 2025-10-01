@@ -450,8 +450,8 @@ Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalh
 
 ## 👨‍💻 Autor
 
-**Victor Pannunzio**
-- GitHub: [@vpannunzio](https://github.com/vpannunzio)
+**Victor POS**
+- GitHub: [@victor-pos](https://github.com/victor-pos)
 
 ## 📞 Suporte
 
@@ -460,4 +460,3 @@ Se você encontrar algum problema ou tiver dúvidas, por favor abra uma issue no
 ---
 
 ⭐ Se este projeto foi útil para você, considere dar uma estrela!
-

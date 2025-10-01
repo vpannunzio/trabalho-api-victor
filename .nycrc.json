@@ -1,0 +1,35 @@
+{
+  "reporter": [
+    "text",
+    "html",
+    "lcov"
+  ],
+  "report-dir": "coverage",
+  "temp-dir": ".nyc_output",
+  "all": true,
+  "include": [
+    "src/**/*.js"
+  ],
+  "exclude": [
+    "src/app.js",
+    "test/**/*.js"
+  ],
+  "watermarks": {
+    "statements": [
+      80,
+      95
+    ],
+    "functions": [
+      80,
+      95
+    ],
+    "branches": [
+      80,
+      95
+    ],
+    "lines": [
+      80,
+      95
+    ]
+  }
+}

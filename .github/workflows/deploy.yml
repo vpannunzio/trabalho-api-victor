@@ -1,0 +1,97 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+
+jobs:
+  deploy:
+    name: Deploy para Produção
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v4
+
+    - name: Configurar Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+
+    - name: Instalar dependências
+      run: npm ci --only=production
+
+    - name: Executar testes finais
+      run: npm test
+      env:
+        NODE_ENV: test
+        JWT_SECRET: test-jwt-secret-key
+        PORT: 3001
+
+    - name: Configurar variáveis de ambiente
+      run: |
+        echo "🔧 Configurando variáveis de ambiente para produção..."
+        # Em um ambiente real, essas variáveis seriam configuradas no servidor
+        echo "NODE_ENV=production" >> .env
+        echo "PORT=3000" >> .env
+        echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+        echo "RATE_LIMIT_WINDOW_MS=900000" >> .env
+        echo "RATE_LIMIT_MAX_REQUESTS=100" >> .env
+
+    - name: Teste de saúde da aplicação
+      run: |
+        echo "🏥 Testando saúde da aplicação..."
+        # Iniciar aplicação em background
+        npm start &
+        APP_PID=$!
+        
+        # Aguardar aplicação inicializar
+        sleep 5
+        
+        # Testar endpoint de health
+        curl -f http://localhost:3000/health || exit 1
+        
+        # Parar aplicação
+        kill $APP_PID
+        echo "✅ Aplicação saudável"
+
+    - name: Deploy para servidor
+      run: |
+        echo "🚀 Iniciando deploy..."
+        # Aqui você configuraria o deploy real para seu servidor
+        # Exemplos de comandos que você poderia usar:
+        
+        # Para Docker:
+        # docker build -t victor-pos-api .
+        # docker run -d -p 3000:3000 --name victor-pos-api victor-pos-api
+        
+        # Para PM2:
+        # pm2 start src/app.js --name victor-pos-api
+        
+        # Para servidor tradicional:
+        # rsync -avz --exclude node_modules . user@server:/path/to/app/
+        # ssh user@server "cd /path/to/app && npm install --production && pm2 restart victor-pos-api"
+        
+        echo "✅ Deploy concluído com sucesso!"
+
+    - name: Verificar deploy
+      run: |
+        echo "🔍 Verificando se o deploy foi bem-sucedido..."
+        # Aguardar aplicação inicializar
+        sleep 10
+        
+        # Testar endpoints principais
+        curl -f http://localhost:3000/health || exit 1
+        curl -f http://localhost:3000/ || exit 1
+        
+        echo "✅ Deploy verificado com sucesso!"
+
+    - name: Notificar sucesso
+      run: |
+        echo "🎉 Deploy realizado com sucesso!"
+        echo "📅 Data: $(date)"
+        echo "🏷️ Tag: ${{ github.ref_name }}"
+        echo "🔗 Commit: ${{ github.sha }}"
