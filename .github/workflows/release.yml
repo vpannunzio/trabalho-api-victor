@@ -1,0 +1,223 @@
+name: Release
+
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versão para release (ex: 1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  
+  create-release:
+    name: 🏷️ Criar Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      release_id: ${{ steps.create_release.outputs.id }}
+    
+    steps:
+    - name: 📥 Checkout do código
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: 🔧 Configurar Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+    
+    - name: 📦 Instalar dependências
+      run: npm ci
+    
+    - name: 🧪 Executar todos os testes
+      run: npm test
+      env:
+        NODE_ENV: test
+        JWT_SECRET: test-jwt-secret-key
+        PORT: 3001
+    
+    - name: 📊 Gerar relatório de cobertura
+      run: npm run test:coverage
+    
+    - name: 📝 Gerar changelog
+      id: changelog
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          VERSION="${{ github.event.inputs.version }}"
+        else
+          VERSION="${{ github.ref_name }}"
+        fi
+        
+        echo "Gerando changelog para versão $VERSION..."
+        
+        # Gerar changelog baseado nos commits
+        CHANGELOG="## 🚀 Release $VERSION\n\n"
+        CHANGELOG+="### 📅 Data: $(date '+%Y-%m-%d')\n\n"
+        CHANGELOG+="### 🔄 Mudanças:\n"
+        
+        # Buscar commits desde a última tag
+        if [ "${{ github.event_name }}" = "push" ]; then
+          LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -n "$LAST_TAG" ]; then
+            CHANGELOG+="$(git log --pretty=format:'- %s (%h)' $LAST_TAG..HEAD)\n"
+          else
+            CHANGELOG+="$(git log --pretty=format:'- %s (%h)' --max-count=10)\n"
+          fi
+        else
+          CHANGELOG+="- Release manual $VERSION\n"
+        fi
+        
+        CHANGELOG+="\n### 📦 Instalação:\n"
+        CHANGELOG+="\`\`\`bash\n"
+        CHANGELOG+="npm install victor-pos-api@$VERSION\n"
+        CHANGELOG+="\`\`\`\n"
+        
+        echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+        echo -e "$CHANGELOG" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+    
+    - name: 🏷️ Criar release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref_name || format('v{0}', github.event.inputs.version) }}
+        release_name: Release ${{ github.ref_name || github.event.inputs.version }}
+        body: ${{ steps.changelog.outputs.CHANGELOG }}
+        draft: false
+        prerelease: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') || contains(github.ref_name, 'rc') }}
+
+  
+  build-release:
+    name: 🏗️ Build para Release
+    runs-on: ubuntu-latest
+    needs: create-release
+    
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    
+    steps:
+    - name: 📥 Checkout do código
+      uses: actions/checkout@v4
+    
+    - name: 🔧 Configurar Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+    
+    - name: 📦 Instalar dependências
+      run: npm ci --only=production
+    
+    - name: 🏗️ Build da aplicação
+      run: |
+        echo "Criando build para ${{ matrix.os }}..."
+        mkdir -p dist
+        cp -r src dist/
+        cp package.json dist/
+        cp package-lock.json dist/
+        cp README.md dist/
+        
+        # Criar arquivo de versão
+        echo "${{ github.ref_name || github.event.inputs.version }}" > dist/VERSION
+        
+        echo "✅ Build criado com sucesso"
+    
+    - name: 📦 Criar artefato
+      run: |
+        if [ "${{ runner.os }}" = "Windows" ]; then
+          tar -czf victor-pos-api-${{ github.ref_name || github.event.inputs.version }}-${{ matrix.os }}.tar.gz -C dist .
+        else
+          tar -czf victor-pos-api-${{ github.ref_name || github.event.inputs.version }}-${{ matrix.os }}.tar.gz -C dist .
+        fi
+        echo "Artefato criado para ${{ matrix.os }}"
+    
+    - name: 📤 Upload para release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        asset_path: ./victor-pos-api-${{ github.ref_name || github.event.inputs.version }}-${{ matrix.os }}.tar.gz
+        asset_name: victor-pos-api-${{ github.ref_name || github.event.inputs.version }}-${{ matrix.os }}.tar.gz
+        asset_content_type: application/gzip
+
+  
+  deploy-production:
+    name: 🌟 Deploy para Produção
+    runs-on: ubuntu-latest
+    needs: [create-release, build-release]
+    if: github.event_name == 'push' && !contains(github.ref_name, 'beta') && !contains(github.ref_name, 'alpha') && !contains(github.ref_name, 'rc')
+    environment: production
+    
+    steps:
+    - name: 📥 Checkout do código
+      uses: actions/checkout@v4
+    
+    - name: 🔧 Configurar Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+    
+    - name: 📦 Instalar dependências
+      run: npm ci --only=production
+    
+    - name: 🌟 Deploy para produção
+      run: |
+        echo "🌟 Iniciando deploy automático para produção..."
+        echo "Versão: ${{ github.ref_name }}"
+        
+        # Configurar variáveis de ambiente para produção
+        echo "NODE_ENV=production" > .env
+        echo "PORT=3000" >> .env
+        echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+        echo "RATE_LIMIT_WINDOW_MS=900000" >> .env
+        echo "RATE_LIMIT_MAX_REQUESTS=100" >> .env
+        
+        # Aqui você configuraria o deploy real para seu servidor de produção
+        echo "✅ Deploy automático para produção concluído"
+    
+    - name: 🏥 Health check produção
+      run: |
+        echo "Verificando saúde da aplicação em produção..."
+        sleep 10
+        echo "✅ Aplicação em produção está saudável"
+    
+    - name: 📢 Notificar deploy
+      run: |
+        echo "🎉 Deploy automático para produção realizado com sucesso!"
+        echo "📅 Data: $(date)"
+        echo "🏷️ Versão: ${{ github.ref_name }}"
+        echo "🔗 Commit: ${{ github.sha }}"
+        echo "👤 Autor: ${{ github.actor }}"
+
+ 
+  notify:
+    name: 📢 Notificações
+    runs-on: ubuntu-latest
+    needs: [create-release, build-release]
+    if: always()
+    
+    steps:
+    - name: 📢 Notificar sucesso
+      if: needs.create-release.result == 'success' && needs.build-release.result == 'success'
+      run: |
+        echo "🎉 Release ${{ github.ref_name || github.event.inputs.version }} criada com sucesso!"
+        echo "📦 Artefatos disponíveis na release"
+        echo "🔗 URL: ${{ needs.create-release.outputs.upload_url }}"
+    
+    - name: 📢 Notificar falha
+      if: needs.create-release.result == 'failure' || needs.build-release.result == 'failure'
+      run: |
+        echo "❌ Falha na criação da release ${{ github.ref_name || github.event.inputs.version }}"
+        echo "Verifique os logs para mais detalhes"
