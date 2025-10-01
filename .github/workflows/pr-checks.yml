@@ -3,9 +3,9 @@ name: Pull Request Checks
 
 on:
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, develop, master ]
   pull_request_target:
-    branches: [ main ]
+    branches: [ main, master ]
 
 jobs:
  
